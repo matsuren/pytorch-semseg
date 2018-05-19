@@ -41,12 +41,14 @@ class SUNRGBDLoader(data.Dataset):
                      "val": 'test',}
         self.split = split_map[split]
 
+
         for split in ["train", "test"]:
-            file_list =  sorted(recursive_glob(rootdir=self.root + split + '/', suffix='jpg'))
+            file_list =  sorted(recursive_glob(rootdir=self.root +'image/' + self.split + '/', suffix='jpg'))
+            print(file_list)
             self.files[split] = file_list
 
         for split in ["train", "test"]:
-            file_list =  sorted(recursive_glob(rootdir=self.root + 'annotations/' + split + '/', suffix='png'))
+            file_list =  sorted(recursive_glob(rootdir=self.root + 'label37/' + self.split + '/', suffix='png'))
             self.anno_files[split] = file_list
 
 
@@ -150,9 +152,10 @@ if __name__ == '__main__':
                              RandomRotate(10),
                              RandomHorizontallyFlip()])
 
-    local_path = '/home/meet/datasets/SUNRGBD/'
+    local_path = '/home/komatsu/work/datasets/SUN_RGBD/'
     dst = SUNRGBDLoader(local_path, is_transform=True, augmentations=augmentations)
     bs = 4
+    print('loader', len(dst))
     trainloader = data.DataLoader(dst, batch_size=bs, num_workers=0)
     for i, data in enumerate(trainloader):
         imgs, labels = data

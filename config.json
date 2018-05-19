@@ -31,7 +31,7 @@
 
   "sunrgbd":
   {
-    "data_path": "/home/meet/datasets/SUNRBGD/"
+    "data_path": "/home/komatsu/work/datasets/SUN_RGBD/"
   },
   
   "cityscapes":
