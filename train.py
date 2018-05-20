@@ -17,9 +17,10 @@ from ptsemseg.metrics import runningScore
 from ptsemseg.loss import *
 from ptsemseg.augmentations import *
 
-cpu=False
+
 
 def train(args):
+    cpu = args.gpu < 0
 
     # Setup Augmentations
     data_aug= Compose([RandomRotate(10),                                        
@@ -46,13 +47,19 @@ def train(args):
                            Y=torch.zeros((1)).cpu(),
                            opts=dict(xlabel='minibatches',
                                      ylabel='Loss',
-                                     title='Training Loss',
+                                     title=args.arch + ' Training Loss '+ args.dataset,
                                      legend=['Loss']))
-
+        acc_window = vis.line(X=np.zeros((1, 4)),
+                              Y=np.zeros((1, 4)),
+                              opts=dict(xlabel='epoch',
+                                        ylabel='Accuracy',
+                                        title=args.arch + ' Accuracy '+ args.dataset,
+                                        legend=['acc', 'acc_cls', 'fwavacc', 'mean_iu']))
     # Setup Model
     model = get_model(args.arch, n_classes)
     
-    model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
+    # model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
+    model = torch.nn.DataParallel(model, device_ids=[args.gpu])
     if cpu:
         model.cpu()
     else:
@@ -81,7 +88,8 @@ def train(args):
         else:
             print("No checkpoint found at '{}'".format(args.resume)) 
 
-    best_iou = -100.0 
+    best_iou = -100.0
+    dataset_len = len(trainloader)
     for epoch in range(args.n_epoch):
         model.train()
         for i, (images, labels) in enumerate(trainloader):
@@ -102,7 +110,7 @@ def train(args):
 
             if args.visdom:
                 vis.line(
-                    X=torch.ones((1, 1)).cpu() * i,
+                    X=torch.ones((1, 1)).cpu() * (i + dataset_len*epoch),
                     Y=torch.Tensor([loss.data[0]]).unsqueeze(0).cpu(),
                     win=loss_window,
                     update='append')
@@ -121,8 +129,16 @@ def train(args):
             running_metrics.update(gt, pred)
 
         score, class_iou = running_metrics.get_scores()
+        acc = []
         for k, v in score.items():
             print(k, v)
+            acc.append(v)
+        if args.visdom:
+            vis.line(
+                X=np.ones((1, 4)) * epoch,
+                Y=np.array([acc]),
+                win=acc_window,
+                update='append')
         running_metrics.reset()
 
         if score['Mean IoU : \t'] >= best_iou:
@@ -161,10 +177,12 @@ if __name__ == '__main__':
                         help='Path to previous saved model to restart from')
 
     parser.add_argument('--visdom', dest='visdom', action='store_true', 
-                        help='Enable visualization(s) on visdom | False by default')
+                        help='Enable visualization(s) on visdom | True by default')
     parser.add_argument('--no-visdom', dest='visdom', action='store_false', 
-                        help='Disable visualization(s) on visdom | False by default')
+                        help='Disable visualization(s) on visdom | True by default')
     parser.set_defaults(visdom=True)
+    parser.add_argument('--gpu', nargs='?', type=int, default=0,
+                        help='GPU id')
 
     args = parser.parse_args()
     train(args)
