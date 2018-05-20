@@ -17,12 +17,7 @@ class SUNRGBDLoader(data.Dataset):
     """SUNRGBD loader
 
     Download From: 
-    http://www.doc.ic.ac.uk/~ahanda/SUNRGBD-test_images.tgz
-        test source: http://www.doc.ic.ac.uk/~ahanda/SUNRGBD-test_images.tgz
-        train source: http://www.doc.ic.ac.uk/~ahanda/SUNRGBD-train_images.tgz
-
-        first 5050 in this is test, later 5051 is train
-        test and train labels source: https://github.com/ankurhanda/sunrgbd-meta-data/raw/master/sunrgbd_train_test_labels.tar.gz
+    https://github.com/chrischoy/SUN_RGBD
     """
 
     def __init__(self, root, split="training", is_transform=False, img_size=(480, 640), augmentations=None, img_norm=True):
@@ -44,7 +39,6 @@ class SUNRGBDLoader(data.Dataset):
 
         for split in ["train", "test"]:
             file_list =  sorted(recursive_glob(rootdir=self.root +'image/' + self.split + '/', suffix='jpg'))
-            print(file_list)
             self.files[split] = file_list
 
         for split in ["train", "test"]:

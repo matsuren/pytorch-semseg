@@ -3,8 +3,8 @@ import torchvision.models as models
 from ptsemseg.models.fcn import *
 from ptsemseg.models.segnet import *
 from ptsemseg.models.unet import *
-from ptsemseg.models.pspnet import *
-from ptsemseg.models.icnet import *
+# from ptsemseg.models.pspnet import *
+# from ptsemseg.models.icnet import *
 from ptsemseg.models.linknet import *
 from ptsemseg.models.frrn import *
 
@@ -53,9 +53,9 @@ def _get_model_instance(name):
             'fcn16s': fcn16s,
             'unet': unet,
             'segnet': segnet,
-            'pspnet': pspnet,
-			'icnet': icnet,
-			'icnetBN': icnet,
+            # 'pspnet': pspnet,
+			# 'icnet': icnet,
+			# 'icnetBN': icnet,
             'linknet': linknet,
             'frrnA': frrn,
             'frrnB': frrn,

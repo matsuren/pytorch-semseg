@@ -17,6 +17,8 @@ from ptsemseg.metrics import runningScore
 from ptsemseg.loss import *
 from ptsemseg.augmentations import *
 
+cpu=False
+
 def train(args):
 
     # Setup Augmentations
@@ -51,7 +53,10 @@ def train(args):
     model = get_model(args.arch, n_classes)
     
     model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
-    model.cuda()
+    if cpu:
+        model.cpu()
+    else:
+        model.gpu()
     
     # Check if model has custom optimizer / loss
     if hasattr(model.module, 'optimizer'):
@@ -80,8 +85,12 @@ def train(args):
     for epoch in range(args.n_epoch):
         model.train()
         for i, (images, labels) in enumerate(trainloader):
-            images = Variable(images.cuda())
-            labels = Variable(labels.cuda())
+            if cpu:
+                images = Variable(images)
+                labels = Variable(labels)
+            else:
+                images = Variable(images.cuda())
+                labels = Variable(labels.cuda())
 
             optimizer.zero_grad()
             outputs = model(images)
@@ -125,13 +134,13 @@ def train(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hyperparams')
-    parser.add_argument('--arch', nargs='?', type=str, default='fcn8s', 
+    parser.add_argument('--arch', nargs='?', type=str, default='segnet',
                         help='Architecture to use [\'fcn8s, unet, segnet etc\']')
-    parser.add_argument('--dataset', nargs='?', type=str, default='pascal', 
+    parser.add_argument('--dataset', nargs='?', type=str, default='sunrgbd',
                         help='Dataset to use [\'pascal, camvid, ade20k etc\']')
-    parser.add_argument('--img_rows', nargs='?', type=int, default=256, 
+    parser.add_argument('--img_rows', nargs='?', type=int, default=240,
                         help='Height of the input image')
-    parser.add_argument('--img_cols', nargs='?', type=int, default=256, 
+    parser.add_argument('--img_cols', nargs='?', type=int, default=320,
                         help='Width of the input image')
 
     parser.add_argument('--img_norm', dest='img_norm', action='store_true', 
@@ -155,7 +164,7 @@ if __name__ == '__main__':
                         help='Enable visualization(s) on visdom | False by default')
     parser.add_argument('--no-visdom', dest='visdom', action='store_false', 
                         help='Disable visualization(s) on visdom | False by default')
-    parser.set_defaults(visdom=False)
+    parser.set_defaults(visdom=True)
 
     args = parser.parse_args()
     train(args)
