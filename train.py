@@ -56,7 +56,7 @@ def train(args):
     if cpu:
         model.cpu()
     else:
-        model.gpu()
+        model.cuda()
     
     # Check if model has custom optimizer / loss
     if hasattr(model.module, 'optimizer'):
