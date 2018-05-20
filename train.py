@@ -120,8 +120,12 @@ def train(args):
 
         model.eval()
         for i_val, (images_val, labels_val) in tqdm(enumerate(valloader)):
-            images_val = Variable(images_val.cuda(), volatile=True)
-            labels_val = Variable(labels_val.cuda(), volatile=True)
+            if cpu:
+                images_val = Variable(images_val, volatile=True)
+                labels_val = Variable(labels_val, volatile=True)
+            else:
+                images_val = Variable(images_val.cuda(), volatile=True)
+                labels_val = Variable(labels_val.cuda(), volatile=True)
 
             outputs = model(images_val)
             pred = outputs.data.max(1)[1].cpu().numpy()
@@ -129,10 +133,13 @@ def train(args):
             running_metrics.update(gt, pred)
 
         score, class_iou = running_metrics.get_scores()
-        acc = []
+        acc = [score['Overall Acc: \t'],
+               score['Mean Acc : \t'],
+               score['FreqW Acc : \t'],
+               score['Mean IoU : \t']]
+
         for k, v in score.items():
             print(k, v)
-            acc.append(v)
         if args.visdom:
             vis.line(
                 X=np.ones((1, 4)) * epoch,
