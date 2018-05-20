@@ -21,8 +21,10 @@ from ptsemseg.augmentations import *
 
 def train(args):
     cpu = args.gpu < 0
+    if not cpu:
+        torch.cuda.set_device(args.gpu)
 
-    # Setup Augmentations
+# Setup Augmentations
     data_aug= Compose([RandomRotate(10),                                        
                        RandomHorizontallyFlip()])
 
@@ -59,7 +61,7 @@ def train(args):
     model = get_model(args.arch, n_classes)
     
     # model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
-    model = torch.nn.DataParallel(model, device_ids=[args.gpu])
+    model = torch.nn.DataParallel(model, device_ids=[args.gpu], output_device=args.gpu)
     if cpu:
         model.cpu()
     else:
